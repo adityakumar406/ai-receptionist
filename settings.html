@@ -1,0 +1,209 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Settings | AI Receptionist</title>
+    <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+    <div class="dashboard-layout">
+        <aside class="sidebar">
+            <h2>🤖 AI Receptionist</h2>
+            <nav class="sidebar-nav">
+                <a href="./dashboard.html">🏠 Dashboard</a>
+                <a href="./calls.html">📞 Calls</a>
+                <a href="./messages.html">💬 Messages</a>
+                <a href="./faqs.html">❓ FAQs</a>
+                <a href="./contacts.html">👥 Contacts</a>
+                <a href="./urgent.html">🚨 Urgent Issues</a>
+                <a href="./settings.html">⚙️ Settings</a>
+            </nav>
+        </aside>
+
+        <main class="dashboard-main">
+            <header class="page-actions">
+                <div>
+                    <h1>Business Settings</h1>
+                    <p id="userEmail">Loading...</p>
+                </div>
+                <button id="logoutBtn">Logout</button>
+            </header>
+
+            <section class="table-card" style="padding: 24px; max-width: 750px;">
+                <h2>Business Information</h2>
+                <p>These details will help configure your AI receptionist.</p>
+
+                <form id="settingsForm" style="margin-top: 24px;">
+                    <div class="form-group">
+                        <label for="businessName">Business Name</label>
+                        <input id="businessName" type="text" maxlength="150" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="businessPhone">Business Phone</label>
+                        <input id="businessPhone" type="tel" maxlength="30">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="businessEmail">Business Email</label>
+                        <input id="businessEmail" type="email" maxlength="254">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="businessAddress">Business Address</label>
+                        <input id="businessAddress" type="text" maxlength="300">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="workingHours">Working Hours</label>
+                        <input
+                            id="workingHours"
+                            type="text"
+                            maxlength="200"
+                            placeholder="Monday–Saturday, 9 AM–6 PM"
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="timezone">Timezone</label>
+                        <select id="timezone">
+                            <option value="Asia/Kolkata">India — Asia/Kolkata</option>
+                            <option value="UTC">UTC</option>
+                            <option value="America/New_York">America/New_York</option>
+                            <option value="Europe/London">Europe/London</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>
+                            <input id="aiEnabled" type="checkbox" checked>
+                            Enable AI receptionist
+                        </label>
+                    </div>
+
+                    <button id="saveBtn" type="submit">Save Settings</button>
+                    <p id="message" role="status" aria-live="polite"></p>
+                </form>
+            </section>
+        </main>
+    </div>
+
+    <script type="module">
+        import { supabase } from './js/supabase.js';
+
+        const form = document.getElementById('settingsForm');
+        const message = document.getElementById('message');
+        const saveBtn = document.getElementById('saveBtn');
+
+        let user;
+        let existingSettingsId = null;
+
+        async function init() {
+            const { data, error } = await supabase.auth.getUser();
+
+            if (error || !data.user) {
+                window.location.href = './login.html';
+                return;
+            }
+
+            user = data.user;
+
+            document.getElementById('userEmail').textContent =
+                `Logged in as: ${user.email}`;
+
+            await loadSettings();
+        }
+
+        async function loadSettings() {
+            const { data, error } = await supabase
+                .from('business_settings')
+                .select('*')
+                .eq('user_id', user.id)
+                .limit(1);
+
+            if (error) {
+                message.textContent = `Could not load settings: ${error.message}`;
+                return;
+            }
+
+            const settings = data?.[0];
+
+            if (!settings) return;
+
+            existingSettingsId = settings.id;
+
+            document.getElementById('businessName').value =
+                settings.business_name || '';
+            document.getElementById('businessPhone').value =
+                settings.business_phone || '';
+            document.getElementById('businessEmail').value =
+                settings.business_email || '';
+            document.getElementById('businessAddress').value =
+                settings.business_address || '';
+            document.getElementById('workingHours').value =
+                settings.working_hours || '';
+            document.getElementById('timezone').value =
+                settings.timezone || 'Asia/Kolkata';
+            document.getElementById('aiEnabled').checked =
+                settings.ai_enabled ?? true;
+        }
+
+        form.addEventListener('submit', async event => {
+            event.preventDefault();
+
+            saveBtn.disabled = true;
+            saveBtn.textContent = 'Saving...';
+            message.textContent = '';
+
+            const settingsData = {
+                user_id: user.id,
+                business_name: document.getElementById('businessName').value.trim(),
+                business_phone: document.getElementById('businessPhone').value.trim() || null,
+                business_email: document.getElementById('businessEmail').value.trim() || null,
+                business_address: document.getElementById('businessAddress').value.trim() || null,
+                working_hours: document.getElementById('workingHours').value.trim() || null,
+                timezone: document.getElementById('timezone').value,
+                ai_enabled: document.getElementById('aiEnabled').checked
+            };
+
+            let result;
+
+            if (existingSettingsId) {
+                result = await supabase
+                    .from('business_settings')
+                    .update(settingsData)
+                    .eq('id', existingSettingsId)
+                    .eq('user_id', user.id);
+            } else {
+                result = await supabase
+                    .from('business_settings')
+                    .insert(settingsData)
+                    .select('id')
+                    .single();
+
+                if (!result.error) {
+                    existingSettingsId = result.data.id;
+                }
+            }
+
+            if (result.error) {
+                message.textContent = `Error: ${result.error.message}`;
+            } else {
+                message.textContent = 'Settings saved successfully!';
+            }
+
+            saveBtn.disabled = false;
+            saveBtn.textContent = 'Save Settings';
+        });
+
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+            await supabase.auth.signOut();
+            window.location.href = './login.html';
+        });
+
+        init();
+    </script>
+</body>
+</html>

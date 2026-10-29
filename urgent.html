@@ -1,0 +1,930 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Urgent Issues | AI Receptionist</title>
+    <link rel="stylesheet" href="./css/style.css">
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            min-height: 100%;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f3f6fb;
+            color: #111827;
+        }
+
+        /* Main layout: sidebar and content side by side */
+        .app-layout {
+            display: flex !important;
+            flex-direction: row;
+            align-items: stretch;
+            width: 100%;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            gap: 0;
+        }
+
+        /* Sidebar matching Contacts page */
+        .sidebar {
+            position: relative !important;
+            inset: auto !important;
+            float: none !important;
+            display: block;
+            width: 308px !important;
+            min-width: 308px !important;
+            max-width: 308px !important;
+            height: auto !important;
+            min-height: 100vh;
+            flex: 0 0 308px !important;
+            margin: 0;
+            padding: 0 10px 24px;
+            background: #111827;
+            color: white;
+            overflow: visible;
+            z-index: auto;
+        }
+
+        .sidebar h2 {
+            color: white;
+            font-size: 28px;
+            line-height: 1.2;
+            margin: 0 0 22px;
+            padding: 0;
+        }
+
+        .sidebar nav {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0;
+            margin: 0;
+            padding: 0;
+        }
+
+        .sidebar nav a {
+            display: block;
+            color: #0000ee;
+            font-size: 20px;
+            line-height: 1.25;
+            margin: 7px 0;
+            padding: 0;
+            text-decoration: underline;
+        }
+
+        .sidebar nav a:hover {
+            color: #60a5fa;
+        }
+
+        /* Main page area */
+        .main-content {
+            position: relative !important;
+            inset: auto !important;
+            float: none !important;
+            display: block;
+            flex: 1 1 0 !important;
+            width: 0 !important;
+            min-width: 0 !important;
+            max-width: none !important;
+            margin: 0;
+            padding: 32px 36px;
+            z-index: auto;
+        }
+
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 18px;
+            margin-bottom: 24px;
+            padding: 26px 32px;
+            background: white;
+            border-radius: 18px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, .04);
+        }
+
+        .page-header h1 {
+            margin: 0 0 6px;
+            color: #000;
+            font-size: 38px;
+        }
+
+        .page-header p {
+            margin: 0;
+            color: #64748b;
+            font-size: 18px;
+        }
+
+        button, input, select, textarea {
+            font: inherit;
+        }
+
+        button {
+            border: 0;
+            border-radius: 9px;
+            padding: 12px 17px;
+            cursor: pointer;
+        }
+
+        button:disabled {
+            opacity: .6;
+            cursor: not-allowed;
+        }
+
+        .primary-btn {
+            background: #111827;
+            color: white;
+        }
+
+        .primary-btn:hover {
+            background: #253047;
+        }
+
+        .secondary-btn {
+            background: #e5e7eb;
+            color: #111827;
+        }
+
+        .resolve-btn {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .danger-btn {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        /* Statistics */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 20px;
+            margin-bottom: 28px;
+        }
+
+        .stat-card {
+            min-width: 0;
+            background: white;
+            padding: 24px;
+            border-radius: 15px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, .04);
+        }
+
+        .stat-card p {
+            margin: 0 0 12px;
+            color: #64748b;
+            font-size: 18px;
+        }
+
+        .stat-card h2 {
+            margin: 0;
+            font-size: 30px;
+            color: #000;
+        }
+
+        /* Add/Edit form */
+        .panel {
+            background: white;
+            border-radius: 15px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, .04);
+        }
+
+        .panel h2 {
+            margin-top: 0;
+        }
+
+        .issue-form {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 18px;
+        }
+
+        .form-field {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-width: 0;
+        }
+
+        .form-field.full-width,
+        .form-actions {
+            grid-column: 1 / -1;
+        }
+
+        .form-field label {
+            font-weight: 600;
+        }
+
+        .form-field input,
+        .form-field select,
+        .form-field textarea {
+            width: 100%;
+            min-width: 0;
+            padding: 13px;
+            border: 1px solid #d1d5db;
+            border-radius: 9px;
+            background: white;
+        }
+
+        .form-field textarea {
+            resize: vertical;
+        }
+
+        .form-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        /* Search and filter */
+        .search-input {
+            display: block;
+            width: 100%;
+            min-width: 0;
+            padding: 15px 18px;
+            border: 1px solid #cbd5e1;
+            border-radius: 11px;
+            background: white;
+            margin-bottom: 18px;
+        }
+
+        .filters {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 20px;
+        }
+
+        .status-filter {
+            min-width: 180px;
+            padding: 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 9px;
+            background: white;
+        }
+
+        /* Issue cards */
+        .issue-list {
+            display: grid;
+            gap: 16px;
+        }
+
+        .issue-card {
+            min-width: 0;
+            background: white;
+            padding: 22px;
+            border: 1px solid #e5e7eb;
+            border-left: 5px solid #dc2626;
+            border-radius: 12px;
+            overflow-wrap: anywhere;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, .04);
+        }
+
+        .issue-card.resolved {
+            border-left-color: #16a34a;
+        }
+
+        .issue-card h3 {
+            margin: 0 0 12px;
+            font-size: 20px;
+        }
+
+        .issue-meta {
+            color: #64748b;
+            font-size: 14px;
+            overflow-wrap: anywhere;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+            background: #fee2e2;
+            color: #991b1b;
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+
+        .status-badge.resolved {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .issue-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 9px;
+            margin-top: 16px;
+        }
+
+        .feedback {
+            margin: 12px 0;
+            overflow-wrap: anywhere;
+        }
+
+        .error {
+            color: #dc2626;
+        }
+
+        .success {
+            color: #15803d;
+        }
+
+        [hidden] {
+            display: none !important;
+        }
+
+        /* Tablet and mobile */
+        @media (max-width: 850px) {
+            .app-layout {
+                flex-direction: column !important;
+            }
+
+            .sidebar {
+                width: 100% !important;
+                min-width: 0 !important;
+                max-width: none !important;
+                min-height: auto;
+                height: auto !important;
+                flex: 0 0 auto !important;
+                padding: 16px;
+            }
+
+            .sidebar h2 {
+                margin-bottom: 12px;
+            }
+
+            .sidebar nav {
+                flex-direction: row;
+                flex-wrap: wrap;
+                gap: 5px 18px;
+            }
+
+            .sidebar nav a {
+                margin: 5px 0;
+            }
+
+            .main-content {
+                width: 100% !important;
+                min-width: 0 !important;
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .issue-form {
+                grid-template-columns: 1fr;
+            }
+
+            .form-field.full-width,
+            .form-actions {
+                grid-column: auto;
+            }
+
+            .page-header {
+                padding: 22px;
+            }
+
+            .page-header h1 {
+                font-size: 30px;
+            }
+
+            .filters {
+                align-items: stretch;
+                flex-direction: column;
+            }
+
+            .status-filter {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+<div class="app-layout">
+
+    <aside class="sidebar">
+        <h2>AI Receptionist</h2>
+        <nav aria-label="Main navigation">
+            <a href="./dashboard.html">Dashboard</a>
+            <a href="./calls.html">Calls</a>
+            <a href="./messages.html">Messages</a>
+            <a href="./faqs.html">FAQs</a>
+            <a href="./contacts.html">Contacts</a>
+            <a href="./urgent.html">Urgent Issues</a>
+            <a href="./settings.html">Settings</a>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <header class="page-header">
+            <div>
+                <h1>Urgent Issues</h1>
+                <p id="loggedInText">Checking authentication...</p>
+            </div>
+            <button id="addIssueButton" class="primary-btn" type="button">
+                + Add Issue
+            </button>
+        </header>
+
+        <section class="stats-grid">
+            <article class="stat-card">
+                <p>Total Issues</p>
+                <h2 id="totalCount">0</h2>
+            </article>
+            <article class="stat-card">
+                <p>Open Issues</p>
+                <h2 id="openCount">0</h2>
+            </article>
+            <article class="stat-card">
+                <p>Resolved Issues</p>
+                <h2 id="resolvedCount">0</h2>
+            </article>
+        </section>
+
+        <section id="formPanel" class="panel" hidden>
+            <h2 id="formTitle">Add Urgent Issue</h2>
+
+            <form id="issueForm" class="issue-form">
+                <div class="form-field">
+                    <label for="source">Source</label>
+                    <select id="source">
+                        <option value="manual">Manual</option>
+                        <option value="call">Call</option>
+                        <option value="message">Message</option>
+                    </select>
+                </div>
+
+                <div class="form-field">
+                    <label for="sourceId">Source Record ID (optional)</label>
+                    <input id="sourceId" type="text"
+                           placeholder="Related call/message UUID">
+                </div>
+
+                <div class="form-field full-width">
+                    <label for="reason">Reason for Urgency *</label>
+                    <textarea id="reason" rows="4"
+                              placeholder="Describe the urgent issue..."
+                              required></textarea>
+                </div>
+
+                <div class="form-field">
+                    <label for="issueStatus">Status</label>
+                    <select id="issueStatus">
+                        <option value="open">Open</option>
+                        <option value="resolved">Resolved</option>
+                    </select>
+                </div>
+
+                <div class="form-actions">
+                    <button id="saveButton" class="primary-btn" type="submit">
+                        Save Issue
+                    </button>
+                    <button id="cancelButton" class="secondary-btn" type="button">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+
+            <p id="formFeedback" class="feedback" role="status"></p>
+        </section>
+
+        <section>
+            <input id="searchInput" class="search-input" type="search"
+                   placeholder="Search by reason, source, or status..."
+                   aria-label="Search urgent issues">
+
+            <div class="filters">
+                <label for="statusFilter">Filter by status:</label>
+                <select id="statusFilter" class="status-filter">
+                    <option value="all">All Issues</option>
+                    <option value="open">Open</option>
+                    <option value="resolved">Resolved</option>
+                </select>
+                <button id="refreshButton" class="secondary-btn" type="button">
+                    Refresh
+                </button>
+            </div>
+
+            <p id="listFeedback" class="feedback" role="status" aria-live="polite">
+                Loading urgent issues...
+            </p>
+            <div id="issueList" class="issue-list"></div>
+        </section>
+
+        <p>
+            <button id="logoutButton" class="secondary-btn" type="button">
+                Log Out
+            </button>
+        </p>
+    </main>
+</div>
+
+<script type="module">
+    import { supabase } from './js/supabase.js';
+
+    const $ = (id) => document.getElementById(id);
+
+    let currentUser = null;
+    let issues = [];
+    let editingId = null;
+    let saving = false;
+    const busyIds = new Set();
+
+    function showFeedback(element, message, type = '') {
+        element.textContent = message;
+        element.className = 'feedback ' + type;
+    }
+
+    function isResolved(issue) {
+        return String(issue.status || 'open').trim().toLowerCase()
+            === 'resolved';
+    }
+
+    async function init() {
+        const { data, error } = await supabase.auth.getUser();
+
+        if (error || !data.user) {
+            window.location.replace('./login.html');
+            return;
+        }
+
+        currentUser = data.user;
+        $('loggedInText').textContent = 'Logged in as: ' + currentUser.email;
+        await loadIssues();
+    }
+
+    async function loadIssues() {
+        if (!currentUser) return;
+
+        showFeedback($('listFeedback'), 'Loading urgent issues...');
+
+        const { data, error } = await supabase
+            .from('urgent_flags')
+            .select('id, user_id, source, source_id, reason, status, created_at')
+            .eq('user_id', currentUser.id)
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            showFeedback(
+                $('listFeedback'),
+                'Could not load issues: ' + error.message,
+                'error'
+            );
+            return;
+        }
+
+        issues = data || [];
+        updateStats();
+        renderIssues();
+    }
+
+    function updateStats() {
+        const resolvedTotal = issues.filter(isResolved).length;
+        $('totalCount').textContent = issues.length;
+        $('resolvedCount').textContent = resolvedTotal;
+        $('openCount').textContent = issues.length - resolvedTotal;
+    }
+
+    function renderIssues() {
+        const query = $('searchInput').value.trim().toLowerCase();
+        const filter = $('statusFilter').value;
+
+        const filtered = issues.filter((issue) => {
+            const done = isResolved(issue);
+
+            if (filter === 'open' && done) return false;
+            if (filter === 'resolved' && !done) return false;
+
+            return [
+                issue.reason,
+                issue.source,
+                issue.status,
+                issue.source_id
+            ].some(value =>
+                String(value ?? '').toLowerCase().includes(query)
+            );
+        });
+
+        const list = $('issueList');
+        list.replaceChildren();
+
+        if (!filtered.length) {
+            showFeedback(
+                $('listFeedback'),
+                query || filter !== 'all'
+                    ? 'No issues match your search or filter.'
+                    : 'No urgent issues found. Click "+ Add Issue" to create one.'
+            );
+            return;
+        }
+
+        showFeedback($('listFeedback'), `${filtered.length} issue(s) found.`);
+
+        for (const issue of filtered) {
+            const done = isResolved(issue);
+            const card = document.createElement('article');
+            card.className = 'issue-card' + (done ? ' resolved' : '');
+
+            const title = document.createElement('h3');
+            title.textContent = issue.reason || 'Urgent issue';
+
+            const badge = document.createElement('span');
+            badge.className = 'status-badge' + (done ? ' resolved' : '');
+            badge.textContent = done ? 'Resolved' : 'Open';
+
+            const source = document.createElement('p');
+            source.className = 'issue-meta';
+            source.textContent = 'Source: ' + (issue.source || 'Unknown');
+
+            const sourceId = document.createElement('p');
+            sourceId.className = 'issue-meta';
+            sourceId.textContent =
+                'Source ID: ' + (issue.source_id || 'Not provided');
+
+            const created = document.createElement('p');
+            created.className = 'issue-meta';
+            created.textContent = issue.created_at
+                ? 'Created: ' + new Date(issue.created_at).toLocaleString()
+                : '';
+
+            const actions = document.createElement('div');
+            actions.className = 'issue-actions';
+
+            const editButton = document.createElement('button');
+            editButton.type = 'button';
+            editButton.className = 'secondary-btn';
+            editButton.textContent = 'Edit';
+            editButton.disabled = busyIds.has(issue.id);
+            editButton.addEventListener('click', () => startEditing(issue));
+
+            const statusButton = document.createElement('button');
+            statusButton.type = 'button';
+            statusButton.className = done ? 'secondary-btn' : 'resolve-btn';
+            statusButton.textContent = done ? 'Reopen Issue' : 'Mark Resolved';
+            statusButton.disabled = busyIds.has(issue.id);
+            statusButton.addEventListener('click', () => toggleStatus(issue));
+
+            const deleteButton = document.createElement('button');
+            deleteButton.type = 'button';
+            deleteButton.className = 'danger-btn';
+            deleteButton.textContent = 'Delete';
+            deleteButton.disabled = busyIds.has(issue.id);
+            deleteButton.addEventListener('click', () => deleteIssue(issue));
+
+            actions.append(editButton, statusButton, deleteButton);
+            card.append(title, badge, source, sourceId, created, actions);
+            list.append(card);
+        }
+    }
+
+    function startEditing(issue) {
+        editingId = issue.id;
+        $('source').value = issue.source || 'manual';
+        $('sourceId').value = issue.source_id || '';
+        $('reason').value = issue.reason || '';
+        $('issueStatus').value = isResolved(issue) ? 'resolved' : 'open';
+        $('formTitle').textContent = 'Edit Urgent Issue';
+        $('saveButton').textContent = 'Save Changes';
+        $('formPanel').hidden = false;
+
+        showFeedback($('formFeedback'), 'Edit the issue details.');
+        $('formPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function resetForm() {
+        $('issueForm').reset();
+        editingId = null;
+        $('formTitle').textContent = 'Add Urgent Issue';
+        $('saveButton').textContent = 'Save Issue';
+        $('formPanel').hidden = true;
+        showFeedback($('formFeedback'), '');
+    }
+
+    $('addIssueButton').addEventListener('click', () => {
+        resetForm();
+        $('formPanel').hidden = false;
+        $('formPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        $('reason').focus();
+    });
+
+    $('cancelButton').addEventListener('click', resetForm);
+    $('searchInput').addEventListener('input', renderIssues);
+    $('statusFilter').addEventListener('change', renderIssues);
+    $('refreshButton').addEventListener('click', loadIssues);
+
+    $('issueForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        if (saving || !currentUser) return;
+
+        const reason = $('reason').value.trim();
+        const sourceIdText = $('sourceId').value.trim();
+
+        if (!reason) {
+            showFeedback($('formFeedback'), 'Please enter the reason.', 'error');
+            return;
+        }
+
+        const payload = {
+            source: $('source').value,
+            source_id: sourceIdText || null,
+            reason,
+            status: $('issueStatus').value
+        };
+
+        saving = true;
+        $('saveButton').disabled = true;
+        $('cancelButton').disabled = true;
+
+        const wasEditing = editingId !== null;
+
+        showFeedback(
+            $('formFeedback'),
+            wasEditing ? 'Saving changes...' : 'Adding issue...'
+        );
+
+        try {
+            let result;
+
+            if (wasEditing) {
+                result = await supabase
+                    .from('urgent_flags')
+                    .update(payload)
+                    .eq('id', editingId)
+                    .eq('user_id', currentUser.id)
+                    .select('id');
+            } else {
+                result = await supabase
+                    .from('urgent_flags')
+                    .insert({ ...payload, user_id: currentUser.id })
+                    .select('id');
+            }
+
+            if (result.error) {
+                showFeedback(
+                    $('formFeedback'),
+                    'Could not save issue: ' + result.error.message,
+                    'error'
+                );
+                return;
+            }
+
+            if (!result.data || result.data.length === 0) {
+                showFeedback(
+                    $('formFeedback'),
+                    'No issue was saved. Check your Supabase INSERT/UPDATE policy.',
+                    'error'
+                );
+                return;
+            }
+
+            resetForm();
+            await loadIssues();
+
+            showFeedback(
+                $('listFeedback'),
+                wasEditing ? 'Issue updated successfully.' : 'Issue added successfully.',
+                'success'
+            );
+        } catch (error) {
+            showFeedback(
+                $('formFeedback'),
+                error.message || 'An unexpected error occurred.',
+                'error'
+            );
+        } finally {
+            saving = false;
+            $('saveButton').disabled = false;
+            $('cancelButton').disabled = false;
+        }
+    });
+
+    async function toggleStatus(issue) {
+        if (busyIds.has(issue.id)) return;
+
+        busyIds.add(issue.id);
+        renderIssues();
+
+        const nextStatus = isResolved(issue) ? 'open' : 'resolved';
+
+        const { data, error } = await supabase
+            .from('urgent_flags')
+            .update({ status: nextStatus })
+            .eq('id', issue.id)
+            .eq('user_id', currentUser.id)
+            .select('id');
+
+        busyIds.delete(issue.id);
+
+        if (error) {
+            showFeedback(
+                $('listFeedback'),
+                'Could not update issue: ' + error.message,
+                'error'
+            );
+            renderIssues();
+            return;
+        }
+
+        if (!data || data.length === 0) {
+            showFeedback(
+                $('listFeedback'),
+                'No issue updated. Check your Supabase UPDATE policy.',
+                'error'
+            );
+            renderIssues();
+            return;
+        }
+
+        await loadIssues();
+        showFeedback(
+            $('listFeedback'),
+            nextStatus === 'resolved' ? 'Issue marked resolved.' : 'Issue reopened.',
+            'success'
+        );
+    }
+
+    async function deleteIssue(issue) {
+        if (busyIds.has(issue.id)) return;
+
+        if (!window.confirm('Are you sure you want to delete this issue?')) {
+            return;
+        }
+
+        busyIds.add(issue.id);
+        renderIssues();
+
+        const { data, error } = await supabase
+            .from('urgent_flags')
+            .delete()
+            .eq('id', issue.id)
+            .eq('user_id', currentUser.id)
+            .select('id');
+
+        busyIds.delete(issue.id);
+
+        if (error) {
+            showFeedback(
+                $('listFeedback'),
+                'Could not delete issue: ' + error.message,
+                'error'
+            );
+            renderIssues();
+            return;
+        }
+
+        if (!data || data.length === 0) {
+            showFeedback(
+                $('listFeedback'),
+                'No issue deleted. Check your Supabase DELETE policy.',
+                'error'
+            );
+            renderIssues();
+            return;
+        }
+
+        await loadIssues();
+        showFeedback($('listFeedback'), 'Issue deleted successfully.', 'success');
+    }
+
+    $('logoutButton').addEventListener('click', async () => {
+        const { error } = await supabase.auth.signOut();
+
+        if (error) {
+            showFeedback(
+                $('listFeedback'),
+                'Logout failed: ' + error.message,
+                'error'
+            );
+            return;
+        }
+
+        window.location.replace('./login.html');
+    });
+
+    init();
+</script>
+</body>
+</html>

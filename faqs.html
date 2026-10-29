@@ -1,0 +1,751 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FAQs | AI Receptionist</title>
+    <link rel="stylesheet" href="./css/style.css">
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        .faq-form {
+            display: grid;
+            gap: 14px;
+        }
+
+        .faq-form label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+
+        .faq-form input:not([type="checkbox"]),
+        .faq-form textarea,
+        .faq-form select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font: inherit;
+        }
+
+        .faq-form textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .checkbox-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .checkbox-row input {
+            width: auto;
+        }
+
+        .faq-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .faq-header-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            min-width: 180px;
+        }
+
+        .faq-header-actions button {
+            width: 100%;
+        }
+
+        .export-button {
+            background: #047857;
+            color: white;
+            border: none;
+            padding: 12px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            font: inherit;
+        }
+
+        .export-button:hover {
+            background: #065f46;
+        }
+
+        .edit-button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 7px 11px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .delete-button {
+            background: #dc2626;
+            color: white;
+            border: none;
+            padding: 7px 11px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .edit-button:disabled,
+        .delete-button:disabled,
+        .export-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .status-message {
+            margin: 12px 0;
+            overflow-wrap: anywhere;
+        }
+
+        .status-active {
+            color: #15803d;
+            font-weight: 600;
+        }
+
+        .status-inactive {
+            color: #b45309;
+            font-weight: 600;
+        }
+
+        .modal-content {
+            max-width: 600px;
+        }
+
+        .faq-search {
+            width: 100%;
+            max-width: 100%;
+            padding: 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font: inherit;
+            margin-bottom: 18px;
+        }
+
+        .faq-table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        .faq-table-wrapper table {
+            width: 100%;
+            min-width: 750px;
+        }
+
+        .faq-table-wrapper th,
+        .faq-table-wrapper td {
+            overflow-wrap: anywhere;
+            vertical-align: top;
+        }
+
+        .faq-empty {
+            padding: 20px;
+            text-align: center;
+        }
+
+        @media (max-width: 650px) {
+            .faq-header-actions {
+                width: 100%;
+                min-width: 0;
+            }
+
+            .faq-form {
+                gap: 12px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="dashboard-layout">
+        <aside class="sidebar">
+            <h2>AI Receptionist</h2>
+
+            <nav class="sidebar-nav">
+                <a href="./dashboard.html">Dashboard</a>
+                <a href="./calls.html">Calls</a>
+                <a href="./messages.html">Messages</a>
+                <a href="./faqs.html" aria-current="page">FAQs</a>
+                <a href="./contacts.html">Contacts</a>
+                <a href="./urgent.html">Urgent Issues</a>
+                <a href="./settings.html">Settings</a>
+            </nav>
+        </aside>
+
+        <main class="dashboard-main">
+            <header class="page-actions">
+                <div>
+                    <h1>Frequently Asked Questions</h1>
+                    <p id="userEmail">Checking login...</p>
+                </div>
+
+                <div class="faq-header-actions">
+                    <button
+                        type="button"
+                        id="exportFaqsButton"
+                        class="export-button"
+                    >
+                        Export CSV
+                    </button>
+
+                    <button type="button" id="addFaqButton">
+                        + Add FAQ
+                    </button>
+                </div>
+            </header>
+
+            <p
+                id="statusMessage"
+                class="status-message"
+                role="status"
+                aria-live="polite"
+            ></p>
+
+            <section class="search-section">
+                <input
+                    type="search"
+                    id="searchInput"
+                    class="faq-search"
+                    placeholder="Search questions, answers, or categories..."
+                    aria-label="Search FAQs"
+                >
+            </section>
+
+            <section class="table-card">
+                <div class="faq-table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Question</th>
+                                <th>Answer</th>
+                                <th>Category</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="faqTableBody">
+                            <tr>
+                                <td colspan="6" class="faq-empty">
+                                    Loading FAQs...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <div
+        class="modal"
+        id="faqModal"
+        aria-hidden="true"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modalTitle"
+    >
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Add New FAQ</h2>
+
+                <button
+                    type="button"
+                    id="closeModalButton"
+                    aria-label="Close dialog"
+                >
+                    &times;
+                </button>
+            </div>
+
+            <form id="faqForm" class="faq-form">
+                <div>
+                    <label for="question">Question</label>
+                    <input
+                        id="question"
+                        name="question"
+                        type="text"
+                        maxlength="500"
+                        required
+                    >
+                </div>
+
+                <div>
+                    <label for="answer">Answer</label>
+                    <textarea
+                        id="answer"
+                        name="answer"
+                        maxlength="20000"
+                        required
+                    ></textarea>
+                </div>
+
+                <div>
+                    <label for="category">Category</label>
+                    <select id="category" name="category" required>
+                        <option value="General">General</option>
+                        <option value="Pricing">Pricing</option>
+                        <option value="Services">Services</option>
+                        <option value="Working Hours">Working Hours</option>
+                        <option value="Location">Location</option>
+                        <option value="Booking">Booking</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+
+                <label class="checkbox-row">
+                    <input
+                        id="active"
+                        name="active"
+                        type="checkbox"
+                        checked
+                    >
+                    Active FAQ
+                </label>
+
+                <div class="faq-actions">
+                    <button type="submit" id="saveFaqButton">
+                        Save FAQ
+                    </button>
+
+                    <button type="button" id="cancelFaqButton">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script type="module">
+        import { supabase } from './js/supabase.js';
+
+        const userEmail = document.getElementById('userEmail');
+        const statusMessage = document.getElementById('statusMessage');
+        const tableBody = document.getElementById('faqTableBody');
+        const searchInput = document.getElementById('searchInput');
+        const faqModal = document.getElementById('faqModal');
+        const faqForm = document.getElementById('faqForm');
+        const saveButton = document.getElementById('saveFaqButton');
+        const exportButton = document.getElementById('exportFaqsButton');
+
+        let user = null;
+        let allFaqs = [];
+        let editingFaqId = null;
+        let saving = false;
+
+        function showMessage(message, isError = false) {
+            statusMessage.textContent = message;
+            statusMessage.style.color = isError ? '#dc2626' : '#15803d';
+        }
+
+        function clearMessage() {
+            statusMessage.textContent = '';
+        }
+
+        function createCell(value) {
+            const cell = document.createElement('td');
+            cell.textContent = value ?? '';
+            return cell;
+        }
+
+        function openAddModal() {
+            editingFaqId = null;
+            faqForm.reset();
+
+            document.getElementById('modalTitle').textContent = 'Add New FAQ';
+            document.getElementById('active').checked = true;
+            saveButton.textContent = 'Save FAQ';
+
+            faqModal.classList.add('show');
+            faqModal.setAttribute('aria-hidden', 'false');
+
+            document.getElementById('question').focus();
+        }
+
+        function openEditModal(faq) {
+            editingFaqId = faq.id;
+
+            document.getElementById('modalTitle').textContent = 'Edit FAQ';
+            document.getElementById('question').value = faq.question || '';
+            document.getElementById('answer').value = faq.answer || '';
+            document.getElementById('category').value =
+                faq.category || 'General';
+            document.getElementById('active').checked = faq.active === true;
+
+            saveButton.textContent = 'Save Changes';
+
+            faqModal.classList.add('show');
+            faqModal.setAttribute('aria-hidden', 'false');
+
+            document.getElementById('question').focus();
+        }
+
+        function closeModal() {
+            faqModal.classList.remove('show');
+            faqModal.setAttribute('aria-hidden', 'true');
+            editingFaqId = null;
+            faqForm.reset();
+        }
+
+        function renderFaqs() {
+            const term = searchInput.value.trim().toLowerCase();
+
+            const filtered = allFaqs.filter(faq => [
+                faq.question,
+                faq.answer,
+                faq.category
+            ].some(value =>
+                String(value ?? '').toLowerCase().includes(term)
+            ));
+
+            tableBody.replaceChildren();
+
+            if (filtered.length === 0) {
+                const row = document.createElement('tr');
+                const cell = createCell(
+                    term
+                        ? 'No FAQs match your search.'
+                        : 'No FAQs yet. Click "+ Add FAQ" to create one.'
+                );
+
+                cell.colSpan = 6;
+                cell.className = 'faq-empty';
+                row.appendChild(cell);
+                tableBody.appendChild(row);
+                return;
+            }
+
+            filtered.forEach(faq => {
+                const row = document.createElement('tr');
+
+                row.appendChild(createCell(faq.question));
+                row.appendChild(createCell(faq.answer));
+                row.appendChild(createCell(faq.category || 'General'));
+
+                const statusCell = createCell(
+                    faq.active ? 'Active' : 'Inactive'
+                );
+
+                statusCell.className = faq.active
+                    ? 'status-active'
+                    : 'status-inactive';
+
+                row.appendChild(statusCell);
+
+                row.appendChild(createCell(
+                    faq.created_at
+                        ? new Date(faq.created_at).toLocaleDateString()
+                        : '—'
+                ));
+
+                const actionsCell = document.createElement('td');
+                const actions = document.createElement('div');
+                actions.className = 'faq-actions';
+
+                const editButton = document.createElement('button');
+                editButton.type = 'button';
+                editButton.textContent = 'Edit';
+                editButton.className = 'edit-button';
+
+                editButton.addEventListener('click', () => {
+                    clearMessage();
+                    openEditModal(faq);
+                });
+
+                const deleteButton = document.createElement('button');
+                deleteButton.type = 'button';
+                deleteButton.textContent = 'Delete';
+                deleteButton.className = 'delete-button';
+
+                deleteButton.addEventListener('click', () => {
+                    deleteFaq(faq, deleteButton);
+                });
+
+                actions.append(editButton, deleteButton);
+                actionsCell.appendChild(actions);
+                row.appendChild(actionsCell);
+
+                tableBody.appendChild(row);
+            });
+        }
+
+        async function loadFaqs() {
+            const { data, error } = await supabase
+                .from('faqs')
+                .select('id, user_id, question, answer, category, active, created_at')
+                .eq('user_id', user.id)
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                console.error('Load FAQs error:', error);
+
+                showMessage('Could not load FAQs: ' + error.message, true);
+
+                tableBody.replaceChildren();
+
+                const row = document.createElement('tr');
+                const cell = createCell('Failed to load FAQs.');
+                cell.colSpan = 6;
+                cell.className = 'faq-empty';
+
+                row.appendChild(cell);
+                tableBody.appendChild(row);
+                return false;
+            }
+
+            allFaqs = data || [];
+            renderFaqs();
+            return true;
+        }
+
+        async function deleteFaq(faq, button) {
+            const confirmed = window.confirm(
+                `Delete this FAQ?\n\n${faq.question}`
+            );
+
+            if (!confirmed) return;
+
+            clearMessage();
+            button.disabled = true;
+            button.textContent = 'Deleting...';
+
+            try {
+                const { data, error } = await supabase
+                    .from('faqs')
+                    .delete()
+                    .eq('id', faq.id)
+                    .eq('user_id', user.id)
+                    .select('id');
+
+                if (error) throw error;
+
+                if (!data || data.length === 0) {
+                    throw new Error(
+                        'FAQ was not deleted. Check your Supabase DELETE policy.'
+                    );
+                }
+
+                allFaqs = allFaqs.filter(item => item.id !== faq.id);
+                renderFaqs();
+
+                showMessage('FAQ deleted successfully.');
+            } catch (error) {
+                console.error('Delete FAQ error:', error);
+                showMessage('Could not delete FAQ: ' + error.message, true);
+
+                button.disabled = false;
+                button.textContent = 'Delete';
+            }
+        }
+
+        faqForm.addEventListener('submit', async event => {
+            event.preventDefault();
+
+            if (saving) return;
+
+            clearMessage();
+
+            const wasEditing = editingFaqId !== null;
+            const faqId = editingFaqId;
+
+            const faqData = {
+                question: document.getElementById('question').value.trim(),
+                answer: document.getElementById('answer').value.trim(),
+                category: document.getElementById('category').value,
+                active: document.getElementById('active').checked
+            };
+
+            if (!faqData.question || !faqData.answer) {
+                showMessage(
+                    'Please enter both a question and an answer.',
+                    true
+                );
+                return;
+            }
+
+            saving = true;
+            saveButton.disabled = true;
+            saveButton.textContent = wasEditing
+                ? 'Saving Changes...'
+                : 'Saving...';
+
+            try {
+                if (wasEditing) {
+                    const { data, error } = await supabase
+                        .from('faqs')
+                        .update(faqData)
+                        .eq('id', faqId)
+                        .eq('user_id', user.id)
+                        .select('id');
+
+                    if (error) throw error;
+
+                    if (!data || data.length === 0) {
+                        throw new Error(
+                            'FAQ was not updated. Check your Supabase UPDATE policy.'
+                        );
+                    }
+                } else {
+                    const { error } = await supabase
+                        .from('faqs')
+                        .insert({
+                            ...faqData,
+                            user_id: user.id
+                        });
+
+                    if (error) throw error;
+                }
+
+                closeModal();
+
+                const loaded = await loadFaqs();
+
+                if (loaded) {
+                    showMessage(wasEditing
+                        ? 'FAQ updated successfully.'
+                        : 'FAQ added successfully.');
+                }
+            } catch (error) {
+                console.error('Save FAQ error:', error);
+                showMessage(
+                    `Could not ${wasEditing ? 'update' : 'add'} FAQ: ${error.message}`,
+                    true
+                );
+            } finally {
+                saving = false;
+                saveButton.disabled = false;
+                saveButton.textContent = editingFaqId
+                    ? 'Save Changes'
+                    : 'Save FAQ';
+            }
+        });
+
+        // CSV helpers
+        function csvCell(value) {
+            let text = String(value ?? '');
+
+            // Reduce common spreadsheet formula-injection risks.
+            if (/^[\s]*[=+\-@]/.test(text)) {
+                text = "'" + text;
+            }
+
+            return '"' + text.replace(/"/g, '""') + '"';
+        }
+
+        function exportFaqsToCSV() {
+            clearMessage();
+
+            if (allFaqs.length === 0) {
+                showMessage('There are no FAQs to export.', true);
+                return;
+            }
+
+            const headers = [
+                'Question',
+                'Answer',
+                'Category',
+                'Active',
+                'Created At'
+            ];
+
+            const rows = allFaqs.map(faq => [
+                faq.question,
+                faq.answer,
+                faq.category,
+                faq.active ? 'Yes' : 'No',
+                faq.created_at
+            ]);
+
+            const csv = [
+                headers.map(csvCell).join(','),
+                ...rows.map(row => row.map(csvCell).join(','))
+            ].join('\r\n');
+
+            const blob = new Blob(['\uFEFF' + csv], {
+                type: 'text/csv;charset=utf-8;'
+            });
+
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+
+            link.href = url;
+            link.download =
+                `ai-receptionist-faqs-${new Date().toISOString().slice(0, 10)}.csv`;
+
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+            showMessage(`${allFaqs.length} FAQ(s) exported successfully.`);
+        }
+
+        document.getElementById('addFaqButton')
+            .addEventListener('click', () => {
+                clearMessage();
+                openAddModal();
+            });
+
+        document.getElementById('closeModalButton')
+            .addEventListener('click', closeModal);
+
+        document.getElementById('cancelFaqButton')
+            .addEventListener('click', closeModal);
+
+        document.getElementById('exportFaqsButton')
+            .addEventListener('click', exportFaqsToCSV);
+
+        searchInput.addEventListener('input', renderFaqs);
+
+        faqModal.addEventListener('click', event => {
+            if (event.target === faqModal) closeModal();
+        });
+
+        document.addEventListener('keydown', event => {
+            if (event.key === 'Escape') closeModal();
+        });
+
+        async function init() {
+            const { data, error } = await supabase.auth.getUser();
+
+            if (error || !data.user) {
+                window.location.replace('./login.html');
+                return;
+            }
+
+            user = data.user;
+            userEmail.textContent = `Logged in as: ${user.email}`;
+
+            await loadFaqs();
+
+            supabase.auth.onAuthStateChange((event, session) => {
+                if (event === 'SIGNED_OUT' || !session) {
+                    window.location.replace('./login.html');
+                }
+            });
+        }
+
+        init().catch(error => {
+            console.error('FAQ initialization error:', error);
+            showMessage(
+                'Could not initialize FAQs: ' + error.message,
+                true
+            );
+        });
+    </script>
+</body>
+</html>

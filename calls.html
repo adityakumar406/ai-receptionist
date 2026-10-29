@@ -1,0 +1,695 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calls | AI Receptionist</title>
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f1f5f9;
+            color: #111827;
+        }
+
+        .app-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            flex: 0 0 260px;
+            width: 260px;
+            padding: 22px 16px;
+            background: #111827;
+            color: white;
+        }
+
+        .sidebar h2 {
+            margin: 0 0 24px;
+            font-size: 27px;
+        }
+
+        .sidebar nav {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .sidebar a {
+            color: white;
+            text-decoration: none;
+            padding: 10px 8px;
+            font-size: 17px;
+            border-radius: 6px;
+        }
+
+        .sidebar a:hover { background: #273449; }
+        .sidebar a.active { font-weight: bold; }
+
+        .main-content {
+            flex: 1;
+            min-width: 0;
+            padding: 30px;
+        }
+
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 18px;
+            margin-bottom: 25px;
+        }
+
+        .page-header h1 {
+            margin: 0 0 8px;
+            font-size: 30px;
+        }
+
+        .page-header p { color: #64748b; margin: 0; }
+
+        .header-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 220px;
+            max-width: 100%;
+        }
+
+        button {
+            padding: 13px 18px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        button:disabled { opacity: .6; cursor: not-allowed; }
+        .btn-primary { background: #2563eb; color: white; }
+        .btn-export { background: #047857; color: white; }
+        .btn-danger { background: #dc2626; color: white; }
+        .btn-secondary { background: #64748b; color: white; }
+
+        .card {
+            background: white;
+            padding: 24px;
+            border-radius: 16px;
+            margin-bottom: 24px;
+            box-shadow: 0 3px 12px rgba(15, 23, 42, .04);
+            min-width: 0;
+        }
+
+        .card h2 { margin: 0 0 22px; font-size: 22px; }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 9px;
+            min-width: 0;
+        }
+
+        .full-width { grid-column: 1 / -1; }
+
+        label { font-weight: 600; }
+
+        input, textarea, select {
+            width: 100%;
+            min-width: 0;
+            padding: 13px;
+            border: 1px solid #cbd5e1;
+            border-radius: 9px;
+            font: inherit;
+            background: white;
+        }
+
+        textarea { min-height: 90px; resize: vertical; }
+
+        .checkbox-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .checkbox-row input {
+            width: auto;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            grid-column: 1 / -1;
+        }
+
+        .search-input { margin-bottom: 20px; }
+
+        .table-wrapper { width: 100%; overflow-x: auto; }
+
+        table {
+            width: 100%;
+            min-width: 850px;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 13px 12px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+            vertical-align: top;
+            overflow-wrap: anywhere;
+        }
+
+        th { background: #f8fafc; }
+
+        .table-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .table-actions button { padding: 8px 11px; font-size: 13px; }
+
+        .status-message {
+            display: none;
+            padding: 12px 15px;
+            margin-bottom: 18px;
+            border-radius: 8px;
+            overflow-wrap: anywhere;
+        }
+
+        .status-message.success {
+            display: block;
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-message.error {
+            display: block;
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .empty-state {
+            padding: 20px;
+            text-align: center;
+            color: #64748b;
+        }
+
+        @media (max-width: 900px) {
+            .sidebar { flex-basis: 220px; width: 220px; }
+            .main-content { padding: 22px; }
+        }
+
+        @media (max-width: 650px) {
+            .app-layout { flex-direction: column; }
+            .sidebar { width: 100%; flex: none; padding: 16px; }
+            .sidebar h2 { font-size: 24px; margin-bottom: 12px; }
+            .sidebar nav { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .sidebar a { font-size: 15px; }
+            .main-content { padding: 16px; }
+            .header-actions { width: 100%; }
+            .form-grid { grid-template-columns: minmax(0, 1fr); }
+            .full-width, .form-actions { grid-column: auto; }
+            .card { padding: 18px; }
+        }
+    </style>
+</head>
+
+<body>
+<div class="app-layout">
+    <aside class="sidebar">
+        <h2>AI Receptionist</h2>
+        <nav>
+            <a href="dashboard.html">Dashboard</a>
+            <a href="calls.html" class="active">Calls</a>
+            <a href="messages.html">Messages</a>
+            <a href="faqs.html">FAQs</a>
+            <a href="contacts.html">Contacts</a>
+            <a href="urgent.html">Urgent Issues</a>
+            <a href="settings.html">Settings</a>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <header class="page-header">
+            <div>
+                <h1>Calls</h1>
+                <p>Manage and track your business calls.</p>
+            </div>
+
+            <div class="header-actions">
+                <button type="button" id="exportBtn" class="btn-export">Export CSV</button>
+                <button type="button" id="showFormBtn" class="btn-primary">+ Add Call</button>
+            </div>
+        </header>
+
+        <div id="statusMessage" class="status-message" role="status"></div>
+
+        <section class="card" id="callFormCard" hidden>
+            <h2 id="formTitle">Add Call</h2>
+
+            <form id="callForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="callerName">Caller Name *</label>
+                        <input id="callerName" required maxlength="150">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="callerPhone">Caller Phone</label>
+                        <input id="callerPhone" type="tel" maxlength="50">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="direction">Direction</label>
+                        <select id="direction">
+                            <option value="">Select direction</option>
+                            <option value="inbound">Inbound</option>
+                            <option value="outbound">Outbound</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="status">Status</label>
+                        <input id="status" maxlength="100" placeholder="e.g. completed, missed">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="duration">Duration (seconds)</label>
+                        <input id="duration" type="number" min="0" step="1">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="intent">Intent</label>
+                        <input id="intent" maxlength="500">
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label for="summary">Summary</label>
+                        <textarea id="summary" maxlength="10000"></textarea>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label for="transcript">Transcript</label>
+                        <textarea id="transcript" maxlength="50000"></textarea>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label class="checkbox-row" for="isUrgent">
+                            <input id="isUrgent" type="checkbox">
+                            Mark as urgent
+                        </label>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" id="saveBtn" class="btn-primary">Save Call</button>
+                        <button type="button" id="cancelBtn" class="btn-secondary">Cancel</button>
+                    </div>
+                </div>
+            </form>
+        </section>
+
+        <section class="card">
+            <h2>All Calls</h2>
+
+            <input
+                type="search"
+                id="searchInput"
+                class="search-input"
+                placeholder="Search name, phone, direction, status, summary or intent..."
+                aria-label="Search calls"
+            >
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Caller</th>
+                            <th>Phone</th>
+                            <th>Direction</th>
+                            <th>Status</th>
+                            <th>Duration</th>
+                            <th>Urgent</th>
+                            <th>Created At</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="callsTableBody">
+                        <tr><td colspan="8" class="empty-state">Loading calls...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+</div>
+
+<script type="module">
+    import { supabase } from './js/supabase.js';
+
+    const $ = id => document.getElementById(id);
+
+    let currentUser = null;
+    let calls = [];
+    let editingCallId = null;
+    let busy = false;
+
+    function showStatus(message, type = 'success') {
+        $('statusMessage').textContent = message;
+        $('statusMessage').className = `status-message ${type}`;
+    }
+
+    function clearStatus() {
+        $('statusMessage').textContent = '';
+        $('statusMessage').className = 'status-message';
+    }
+
+    function escapeHtml(value) {
+        return String(value ?? '').replace(/[&<>"']/g, char => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;',
+            '"': '&quot;', "'": '&#39;'
+        })[char]);
+    }
+
+    function setBusy(value) {
+        busy = value;
+        $('saveBtn').disabled = value;
+        $('exportBtn').disabled = value;
+    }
+
+    function openForm(call = null) {
+        clearStatus();
+        $('callForm').reset();
+
+        editingCallId = call?.id ?? null;
+        $('formTitle').textContent = call ? 'Edit Call' : 'Add Call';
+        $('saveBtn').textContent = call ? 'Update Call' : 'Save Call';
+
+        if (call) {
+            $('callerName').value = call.caller_name ?? '';
+            $('callerPhone').value = call.caller_phone ?? '';
+            $('direction').value = call.direction ?? '';
+            $('status').value = call.status ?? '';
+            $('duration').value = call.duration ?? '';
+            $('intent').value = call.intent ?? '';
+            $('summary').value = call.summary ?? '';
+            $('transcript').value = call.transcript ?? '';
+            $('isUrgent').checked = call.is_urgent === true;
+        }
+
+        $('callFormCard').hidden = false;
+        $('callFormCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        $('callerName').focus();
+    }
+
+    function closeForm() {
+        $('callForm').reset();
+        editingCallId = null;
+        $('callFormCard').hidden = true;
+        $('formTitle').textContent = 'Add Call';
+        $('saveBtn').textContent = 'Save Call';
+    }
+
+    function renderCalls() {
+        const query = $('searchInput').value.trim().toLowerCase();
+
+        const filtered = calls.filter(call => [
+            call.caller_name,
+            call.caller_phone,
+            call.direction,
+            call.status,
+            call.intent,
+            call.summary,
+            call.transcript
+        ].join(' ').toLowerCase().includes(query));
+
+        if (!filtered.length) {
+            $('callsTableBody').innerHTML = `
+                <tr><td colspan="8" class="empty-state">
+                    ${query ? 'No matching calls found.' : 'No calls found for this account.'}
+                </td></tr>`;
+            return;
+        }
+
+        $('callsTableBody').innerHTML = filtered.map(call => `
+            <tr>
+                <td>${escapeHtml(call.caller_name)}</td>
+                <td>${escapeHtml(call.caller_phone || '—')}</td>
+                <td>${escapeHtml(call.direction || '—')}</td>
+                <td>${escapeHtml(call.status || '—')}</td>
+                <td>${call.duration == null ? '—' : escapeHtml(call.duration + ' sec')}</td>
+                <td>${call.is_urgent ? 'Yes' : 'No'}</td>
+                <td>${escapeHtml(call.created_at
+                    ? new Date(call.created_at).toLocaleString()
+                    : '—')}</td>
+                <td>
+                    <div class="table-actions">
+                        <button class="btn-primary" type="button"
+                            data-action="edit" data-id="${escapeHtml(call.id)}">Edit</button>
+                        <button class="btn-danger" type="button"
+                            data-action="delete" data-id="${escapeHtml(call.id)}">Delete</button>
+                    </div>
+                </td>
+            </tr>`).join('');
+    }
+
+    async function loadCalls() {
+        $('callsTableBody').innerHTML =
+            '<tr><td colspan="8" class="empty-state">Loading calls...</td></tr>';
+
+        // Select actual database columns rather than assuming a "phone" column.
+        const { data, error } = await supabase
+            .from('calls')
+            .select('*')
+            .eq('user_id', currentUser.id)
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            console.error('Load calls error:', error);
+            $('callsTableBody').innerHTML =
+                '<tr><td colspan="8" class="empty-state">Could not load calls.</td></tr>';
+            showStatus(error.message, 'error');
+            return false;
+        }
+
+        calls = data ?? [];
+        renderCalls();
+        return true;
+    }
+
+    $('callForm').addEventListener('submit', async event => {
+        event.preventDefault();
+        if (busy) return;
+
+        clearStatus();
+
+        const durationText = $('duration').value.trim();
+        const durationValue = durationText === '' ? null : Number(durationText);
+
+        if (durationValue !== null &&
+            (!Number.isInteger(durationValue) || durationValue < 0)) {
+            showStatus('Duration must be a non-negative whole number of seconds.', 'error');
+            return;
+        }
+
+        const payload = {
+            caller_name: $('callerName').value.trim(),
+            caller_phone: $('callerPhone').value.trim() || null,
+            direction: $('direction').value || null,
+            status: $('status').value.trim() || null,
+            duration: durationValue,
+            intent: $('intent').value.trim() || null,
+            summary: $('summary').value.trim() || null,
+            transcript: $('transcript').value.trim() || null,
+            is_urgent: $('isUrgent').checked
+        };
+
+        if (!payload.caller_name) {
+            showStatus('Please enter the caller name.', 'error');
+            return;
+        }
+
+        const wasEditing = Boolean(editingCallId);
+        setBusy(true);
+
+        try {
+            let result;
+
+            if (wasEditing) {
+                result = await supabase
+                    .from('calls')
+                    .update(payload)
+                    .eq('id', editingCallId)
+                    .eq('user_id', currentUser.id)
+                    .select('id');
+            } else {
+                result = await supabase
+                    .from('calls')
+                    .insert({ ...payload, user_id: currentUser.id })
+                    .select('id');
+            }
+
+            if (result.error) throw result.error;
+
+            if (wasEditing && (!result.data || result.data.length === 0)) {
+                throw new Error('Call was not updated. Check your Supabase UPDATE policy.');
+            }
+
+            closeForm();
+            const loaded = await loadCalls();
+
+            if (loaded) {
+                showStatus(wasEditing
+                    ? 'Call updated successfully.'
+                    : 'Call added successfully.');
+            }
+        } catch (error) {
+            console.error('Save call error:', error);
+            showStatus(error.message || 'Could not save call.', 'error');
+        } finally {
+            setBusy(false);
+        }
+    });
+
+    $('callsTableBody').addEventListener('click', async event => {
+        const button = event.target.closest('button[data-action]');
+        if (!button || busy) return;
+
+        const call = calls.find(item => String(item.id) === button.dataset.id);
+        if (!call) return;
+
+        if (button.dataset.action === 'edit') {
+            openForm(call);
+            return;
+        }
+
+        if (button.dataset.action === 'delete') {
+            if (!confirm(`Delete the call from "${call.caller_name}"?`)) return;
+
+            clearStatus();
+            setBusy(true);
+
+            try {
+                const { data, error } = await supabase
+                    .from('calls')
+                    .delete()
+                    .eq('id', call.id)
+                    .eq('user_id', currentUser.id)
+                    .select('id');
+
+                if (error) throw error;
+
+                if (!data || data.length === 0) {
+                    throw new Error('Call was not deleted. Check your Supabase DELETE policy.');
+                }
+
+                const loaded = await loadCalls();
+                if (loaded) showStatus('Call deleted successfully.');
+            } catch (error) {
+                console.error('Delete call error:', error);
+                showStatus(error.message || 'Could not delete call.', 'error');
+            } finally {
+                setBusy(false);
+            }
+        }
+    });
+
+    function csvCell(value) {
+        let text = String(value ?? '');
+
+        // Prevent common spreadsheet formula injection.
+        if (/^[\s]*[=+\-@]/.test(text)) text = "'" + text;
+
+        return '"' + text.replace(/"/g, '""') + '"';
+    }
+
+    function exportCSV() {
+        clearStatus();
+
+        if (!calls.length) {
+            showStatus('There are no calls to export.', 'error');
+            return;
+        }
+
+        const headers = [
+            'Caller Name', 'Caller Phone', 'Direction', 'Status',
+            'Duration (seconds)', 'Intent', 'Summary', 'Transcript',
+            'Urgent', 'Recording URL', 'Created At'
+        ];
+
+        const rows = calls.map(call => [
+            call.caller_name,
+            call.caller_phone,
+            call.direction,
+            call.status,
+            call.duration,
+            call.intent,
+            call.summary,
+            call.transcript,
+            call.is_urgent,
+            call.recording_url,
+            call.created_at
+        ]);
+
+        const csv = [
+            headers.map(csvCell).join(','),
+            ...rows.map(row => row.map(csvCell).join(','))
+        ].join('\r\n');
+
+        const blob = new Blob(['\uFEFF' + csv], {
+            type: 'text/csv;charset=utf-8;'
+        });
+
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `ai-receptionist-calls-${new Date().toISOString().slice(0, 10)}.csv`;
+
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+
+        showStatus(`${calls.length} call(s) exported successfully.`);
+    }
+
+    $('showFormBtn').addEventListener('click', () => openForm());
+    $('cancelBtn').addEventListener('click', closeForm);
+    $('exportBtn').addEventListener('click', exportCSV);
+    $('searchInput').addEventListener('input', renderCalls);
+
+    async function initializePage() {
+        const { data, error } = await supabase.auth.getUser();
+
+        if (error || !data.user) {
+            window.location.replace('login.html');
+            return;
+        }
+
+        currentUser = data.user;
+        await loadCalls();
+
+        supabase.auth.onAuthStateChange((event, session) => {
+            if (event === 'SIGNED_OUT' || !session) {
+                window.location.replace('login.html');
+            }
+        });
+    }
+
+    initializePage().catch(error => {
+        console.error('Initialization error:', error);
+        showStatus('Could not initialize Calls. Check the browser console.', 'error');
+    });
+</script>
+</body>
+</html>

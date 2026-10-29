@@ -1,0 +1,780 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contacts | AI Receptionist</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f1f5f9;
+            color: #111827;
+        }
+
+        /* Main layout: sidebar and content side by side */
+        .app-layout {
+            display: flex;
+            min-height: 100vh;
+            width: 100%;
+        }
+
+        .sidebar {
+            flex: 0 0 260px;
+            width: 260px;
+            min-height: 100vh;
+            padding: 22px 16px;
+            background: #111827;
+            color: white;
+            align-self: stretch;
+        }
+
+        .sidebar h2 {
+            margin: 0 0 24px;
+            font-size: 27px;
+            line-height: 1.3;
+        }
+
+        .sidebar nav {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .sidebar a {
+            display: block;
+            padding: 10px 8px;
+            color: #f9fafb;
+            text-decoration: none;
+            font-size: 17px;
+            border-radius: 6px;
+        }
+
+        .sidebar a:hover {
+            background: #273449;
+        }
+
+        .sidebar a.active {
+            font-weight: bold;
+        }
+
+        .main-content {
+            flex: 1 1 0;
+            min-width: 0;
+            padding: 30px;
+        }
+
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 18px;
+            margin-bottom: 25px;
+        }
+
+        .page-header h1 {
+            margin: 0 0 8px;
+            font-size: 30px;
+        }
+
+        .page-header p {
+            margin: 0;
+            color: #64748b;
+        }
+
+        .header-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 220px;
+            max-width: 100%;
+        }
+
+        button {
+            border: none;
+            border-radius: 10px;
+            padding: 13px 18px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: #2563eb;
+            color: white;
+        }
+
+        .btn-export {
+            background: #047857;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #dc2626;
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #64748b;
+            color: white;
+        }
+
+        .card {
+            background: white;
+            padding: 24px;
+            border-radius: 16px;
+            margin-bottom: 24px;
+            box-shadow: 0 3px 12px rgba(15, 23, 42, 0.04);
+            min-width: 0;
+        }
+
+        .card h2 {
+            margin: 0 0 22px;
+            font-size: 22px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 20px;
+        }
+
+        .form-group {
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 9px;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        label {
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        input,
+        textarea {
+            width: 100%;
+            min-width: 0;
+            padding: 14px;
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 15px;
+            background: white;
+        }
+
+        input:focus,
+        textarea:focus {
+            outline: 2px solid #93c5fd;
+            border-color: #2563eb;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            grid-column: 1 / -1;
+        }
+
+        .search-input {
+            margin-bottom: 20px;
+        }
+
+        .table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 650px;
+        }
+
+        th,
+        td {
+            padding: 14px 12px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+            vertical-align: top;
+        }
+
+        th {
+            background: #f8fafc;
+            color: #334155;
+        }
+
+        td {
+            overflow-wrap: anywhere;
+        }
+
+        .table-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .table-actions button {
+            padding: 8px 11px;
+            font-size: 13px;
+        }
+
+        .status-message {
+            margin-bottom: 18px;
+            padding: 12px 15px;
+            border-radius: 8px;
+            display: none;
+            overflow-wrap: anywhere;
+        }
+
+        .status-message.success {
+            display: block;
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-message.error {
+            display: block;
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .empty-state {
+            padding: 20px;
+            text-align: center;
+            color: #64748b;
+        }
+
+        @media (max-width: 900px) {
+            .sidebar {
+                flex-basis: 220px;
+                width: 220px;
+            }
+
+            .main-content {
+                padding: 22px;
+            }
+        }
+
+        @media (max-width: 650px) {
+            .app-layout {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                flex: none;
+                width: 100%;
+                min-height: auto;
+                padding: 16px;
+            }
+
+            .sidebar h2 {
+                font-size: 24px;
+                margin-bottom: 12px;
+            }
+
+            .sidebar nav {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .sidebar a {
+                font-size: 15px;
+                padding: 9px 6px;
+            }
+
+            .main-content {
+                width: 100%;
+                padding: 16px;
+            }
+
+            .page-header {
+                align-items: stretch;
+            }
+
+            .header-actions {
+                width: 100%;
+            }
+
+            .form-grid {
+                grid-template-columns: minmax(0, 1fr);
+            }
+
+            .form-group.full-width,
+            .form-actions {
+                grid-column: auto;
+            }
+
+            .card {
+                padding: 18px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+<div class="app-layout">
+
+    <aside class="sidebar">
+        <h2>AI Receptionist</h2>
+
+        <nav>
+            <a href="dashboard.html">Dashboard</a>
+            <a href="calls.html">Calls</a>
+            <a href="messages.html">Messages</a>
+            <a href="faqs.html">FAQs</a>
+            <a href="contacts.html" class="active">Contacts</a>
+            <a href="urgent.html">Urgent Issues</a>
+            <a href="settings.html">Settings</a>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+
+        <header class="page-header">
+            <div>
+                <h1>Contacts</h1>
+                <p>Manage your business contacts.</p>
+            </div>
+
+            <div class="header-actions">
+                <button type="button" id="exportBtn" class="btn-export">
+                    Export CSV
+                </button>
+
+                <button type="button" id="showFormBtn" class="btn-primary">
+                    + Add Contact
+                </button>
+            </div>
+        </header>
+
+        <div id="statusMessage" class="status-message" role="status"></div>
+
+        <section class="card" id="contactFormCard" hidden>
+            <h2 id="formTitle">Add Contact</h2>
+
+            <form id="contactForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="name">Name *</label>
+                        <input id="name" name="name" required maxlength="150">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="phone">Phone</label>
+                        <input id="phone" name="phone" type="tel" maxlength="50">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input id="email" name="email" type="email" maxlength="254">
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label for="notes">Notes</label>
+                        <textarea id="notes" name="notes" maxlength="5000"></textarea>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" id="saveBtn" class="btn-primary">
+                            Save Contact
+                        </button>
+
+                        <button type="button" id="cancelBtn" class="btn-secondary">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </section>
+
+        <section class="card">
+            <h2>All Contacts</h2>
+
+            <input
+                type="search"
+                id="searchInput"
+                class="search-input"
+                placeholder="Search by name, phone, email or notes..."
+                aria-label="Search contacts"
+            >
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Phone</th>
+                            <th>Email</th>
+                            <th>Notes</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="contactsTableBody">
+                        <tr>
+                            <td colspan="5" class="empty-state">Loading contacts...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+</div>
+
+<script type="module">
+    import { supabase } from './js/supabase.js';
+
+    const statusMessage = document.getElementById('statusMessage');
+    const contactForm = document.getElementById('contactForm');
+    const formCard = document.getElementById('contactFormCard');
+    const formTitle = document.getElementById('formTitle');
+    const saveBtn = document.getElementById('saveBtn');
+    const showFormBtn = document.getElementById('showFormBtn');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const exportBtn = document.getElementById('exportBtn');
+    const searchInput = document.getElementById('searchInput');
+    const tableBody = document.getElementById('contactsTableBody');
+
+    let currentUser = null;
+    let contacts = [];
+    let editingContactId = null;
+    let busy = false;
+
+    function showStatus(message, type = 'success') {
+        statusMessage.textContent = message;
+        statusMessage.className = `status-message ${type}`;
+    }
+
+    function clearStatus() {
+        statusMessage.textContent = '';
+        statusMessage.className = 'status-message';
+    }
+
+    function escapeHtml(value) {
+        return String(value ?? '').replace(/[&<>"']/g, character => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;'
+        })[character]);
+    }
+
+    function setBusy(value) {
+        busy = value;
+        saveBtn.disabled = value;
+        exportBtn.disabled = value;
+    }
+
+    function openForm(contact = null) {
+        clearStatus();
+        contactForm.reset();
+
+        editingContactId = contact?.id ?? null;
+        formTitle.textContent = contact ? 'Edit Contact' : 'Add Contact';
+        saveBtn.textContent = contact ? 'Update Contact' : 'Save Contact';
+
+        if (contact) {
+            document.getElementById('name').value = contact.name ?? '';
+            document.getElementById('phone').value = contact.phone ?? '';
+            document.getElementById('email').value = contact.email ?? '';
+            document.getElementById('notes').value = contact.notes ?? '';
+        }
+
+        formCard.hidden = false;
+        formCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        document.getElementById('name').focus();
+    }
+
+    function closeForm() {
+        contactForm.reset();
+        editingContactId = null;
+        formCard.hidden = true;
+        formTitle.textContent = 'Add Contact';
+        saveBtn.textContent = 'Save Contact';
+    }
+
+    function renderContacts() {
+        const query = searchInput.value.trim().toLowerCase();
+
+        const filteredContacts = contacts.filter(contact => {
+            const searchable = [
+                contact.name,
+                contact.phone,
+                contact.email,
+                contact.notes
+            ].join(' ').toLowerCase();
+
+            return searchable.includes(query);
+        });
+
+        if (!filteredContacts.length) {
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="5" class="empty-state">
+                        ${query ? 'No matching contacts found.' : 'No contacts yet. Add your first contact.'}
+                    </td>
+                </tr>`;
+            return;
+        }
+
+        tableBody.innerHTML = filteredContacts.map(contact => `
+            <tr>
+                <td>${escapeHtml(contact.name)}</td>
+                <td>${escapeHtml(contact.phone || '—')}</td>
+                <td>${escapeHtml(contact.email || '—')}</td>
+                <td>${escapeHtml(contact.notes || '—')}</td>
+                <td>
+                    <div class="table-actions">
+                        <button type="button"
+                            class="btn-primary"
+                            data-action="edit"
+                            data-id="${escapeHtml(contact.id)}">
+                            Edit
+                        </button>
+
+                        <button type="button"
+                            class="btn-danger"
+                            data-action="delete"
+                            data-id="${escapeHtml(contact.id)}">
+                            Delete
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    async function loadContacts() {
+        tableBody.innerHTML = `
+            <tr><td colspan="5" class="empty-state">Loading contacts...</td></tr>
+        `;
+
+        const { data, error } = await supabase
+            .from('contacts')
+            .select('id, user_id, name, phone, email, notes, created_at')
+            .eq('user_id', currentUser.id)
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            console.error('Load contacts error:', error);
+            tableBody.innerHTML = `
+                <tr><td colspan="5" class="empty-state">Could not load contacts.</td></tr>
+            `;
+            showStatus(error.message, 'error');
+            return;
+        }
+
+        contacts = data ?? [];
+        renderContacts();
+    }
+
+    contactForm.addEventListener('submit', async event => {
+        event.preventDefault();
+        if (busy) return;
+
+        clearStatus();
+
+        const payload = {
+            name: document.getElementById('name').value.trim(),
+            phone: document.getElementById('phone').value.trim() || null,
+            email: document.getElementById('email').value.trim() || null,
+            notes: document.getElementById('notes').value.trim() || null
+        };
+
+        if (!payload.name) {
+            showStatus('Please enter a contact name.', 'error');
+            return;
+        }
+
+        setBusy(true);
+
+        try {
+            let result;
+
+            if (editingContactId) {
+                result = await supabase
+                    .from('contacts')
+                    .update(payload)
+                    .eq('id', editingContactId)
+                    .eq('user_id', currentUser.id)
+                    .select('id');
+            } else {
+                result = await supabase
+                    .from('contacts')
+                    .insert({
+                        ...payload,
+                        user_id: currentUser.id
+                    })
+                    .select('id');
+            }
+
+            if (result.error) throw result.error;
+
+            if (editingContactId && (!result.data || result.data.length === 0)) {
+                throw new Error('Contact was not updated. Check your Supabase UPDATE policy.');
+            }
+
+            closeForm();
+            await loadContacts();
+
+            showStatus(
+                editingContactId ? 'Contact updated successfully.' : 'Contact added successfully.'
+            );
+        } catch (error) {
+            console.error('Save contact error:', error);
+            showStatus(error.message || 'Could not save contact.', 'error');
+        } finally {
+            setBusy(false);
+        }
+    });
+
+    tableBody.addEventListener('click', async event => {
+        const button = event.target.closest('button[data-action]');
+        if (!button || busy) return;
+
+        const contact = contacts.find(item => String(item.id) === button.dataset.id);
+        if (!contact) return;
+
+        if (button.dataset.action === 'edit') {
+            openForm(contact);
+            return;
+        }
+
+        if (button.dataset.action === 'delete') {
+            const confirmed = confirm(`Delete contact "${contact.name}"?`);
+            if (!confirmed) return;
+
+            clearStatus();
+            setBusy(true);
+
+            try {
+                const { data, error } = await supabase
+                    .from('contacts')
+                    .delete()
+                    .eq('id', contact.id)
+                    .eq('user_id', currentUser.id)
+                    .select('id');
+
+                if (error) throw error;
+
+                if (!data || data.length === 0) {
+                    throw new Error('Contact was not deleted. Check your Supabase DELETE policy.');
+                }
+
+                await loadContacts();
+                showStatus('Contact deleted successfully.');
+            } catch (error) {
+                console.error('Delete contact error:', error);
+                showStatus(error.message || 'Could not delete contact.', 'error');
+            } finally {
+                setBusy(false);
+            }
+        }
+    });
+
+    function csvCell(value) {
+        let text = String(value ?? '');
+
+        // Reduce the risk of spreadsheet formula execution.
+        if (/^[\s]*[=+\-@]/.test(text)) {
+            text = "'" + text;
+        }
+
+        return '"' + text.replace(/"/g, '""') + '"';
+    }
+
+    function exportCSV() {
+        clearStatus();
+
+        if (!contacts.length) {
+            showStatus('There are no contacts to export.', 'error');
+            return;
+        }
+
+        const headers = ['Name', 'Phone', 'Email', 'Notes', 'Created At'];
+
+        const rows = contacts.map(contact => [
+            contact.name,
+            contact.phone,
+            contact.email,
+            contact.notes,
+            contact.created_at
+        ]);
+
+        const csv = [
+            headers.map(csvCell).join(','),
+            ...rows.map(row => row.map(csvCell).join(','))
+        ].join('\r\n');
+
+        const blob = new Blob(['\uFEFF' + csv], {
+            type: 'text/csv;charset=utf-8;'
+        });
+
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        const date = new Date().toISOString().slice(0, 10);
+
+        link.href = url;
+        link.download = `ai-receptionist-contacts-${date}.csv`;
+
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+
+        URL.revokeObjectURL(url);
+        showStatus(`${contacts.length} contact(s) exported successfully.`);
+    }
+
+    showFormBtn.addEventListener('click', () => openForm());
+    cancelBtn.addEventListener('click', closeForm);
+    exportBtn.addEventListener('click', exportCSV);
+    searchInput.addEventListener('input', renderContacts);
+
+    async function initializePage() {
+        const { data, error } = await supabase.auth.getUser();
+
+        if (error || !data.user) {
+            window.location.replace('login.html');
+            return;
+        }
+
+        currentUser = data.user;
+        await loadContacts();
+
+        // Keep the session protected if the user signs out.
+        supabase.auth.onAuthStateChange((event, session) => {
+            if (event === 'SIGNED_OUT' || !session) {
+                window.location.replace('login.html');
+            }
+        });
+    }
+
+    initializePage().catch(error => {
+        console.error('Initialization error:', error);
+        showStatus('Could not initialize the Contacts page. Check the console.', 'error');
+    });
+</script>
+</body>
+</html>
